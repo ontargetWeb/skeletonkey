@@ -102,6 +102,14 @@
                     <option value="32">32</option>
                     <option value="64">64</option>
                 </field>
+                 <!--ADD Redirect -->
+              <field
+                        name="redirect_itemid"
+                        type="menuitem"
+                        label="PLG_SYSTEM_SKELETONKEY_CONFIG_REDIRECT_ITEMID_LABEL"
+                        description="PLG_SYSTEM_SKELETONKEY_CONFIG_REDIRECT_ITEMID_DESC"
+                        required="false"
+                />
 
             </fieldset>
         </fields>
