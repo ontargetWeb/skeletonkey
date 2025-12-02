@@ -207,6 +207,58 @@ class Skeletonkey extends CMSPlugin implements SubscriberInterface
 	 * @noinspection PhpUnused
 	 */
 	public function onAfterInitialise(Event $event)
+{
+    // Skeleton key only works in the frontend
+    if (!$this->app->isClient('site'))
+    {
+        return;
+    }
+
+    // Make sure the authentication plugin is enabled. If not, quit,
+    if (!PluginHelper::isEnabled('authentication', 'skeletonkey'))
+    {
+        return;
+    }
+
+    // If the cookie is set AND the user is still a guest, try to log in the user using it
+    $cookieName = self::COOKIE_PREFIX . $this->getHashedUserAgent();
+    $cookie     = $this->app->getInput()->cookie->get($cookieName);
+
+    // Already logged in? Do nothing.
+    $identity = $this->app->getIdentity();
+    if (!$identity->guest)
+    {
+        return;
+    }
+
+    if ($cookie)
+    {
+        // Perform the silent login; Skeletonkey auth plugin will handle the cookie
+        $loginResult = $this->app->login(['username' => ''], ['silent' => true]);
+
+        // If login succeeded, redirect to configured page (if any)
+        if ($loginResult === true || $loginResult instanceof User)
+        {
+            // Get redirect menu item ID from plugin params
+            $itemId = (int) $this->params->get('redirect_itemid', 0);
+
+            if ($itemId > 0)
+            {
+                // Build URL to that menu item
+                $url = Route::_('index.php?Itemid=' . $itemId, false);
+
+                $this->app->redirect($url);
+            }
+        }
+    }
+}
+
+	
+	
+	
+	
+	/** Orig function
+	public function onAfterInitialise(Event $event)
 	{
 		// Skeleton key only works in the frontend
 		if (!$this->app->isClient('site'))
@@ -229,7 +281,7 @@ class Skeletonkey extends CMSPlugin implements SubscriberInterface
 			$this->app->login(['username' => ''], ['silent' => true]);
 		}
 	}
-
+End */
 	/**
 	 * Handle the AJAX request to create a Skeleton Key
 	 *
