@@ -30,6 +30,7 @@ use Joomla\Event\SubscriberInterface;
 use Joomla\Utilities\ArrayHelper;
 use RuntimeException;
 use Throwable;
+use Joomla\CMS\Router\Route;
 
 class Skeletonkey extends CMSPlugin implements SubscriberInterface
 {
