@@ -207,52 +207,65 @@ class Skeletonkey extends CMSPlugin implements SubscriberInterface
 	 * @since        1.0.0
 	 * @noinspection PhpUnused
 	 */
-	public function onAfterInitialise(Event $event)
+
+	/** Changed this function to pickup the URL set in the XML file */
+public function onAfterInitialise(Event $event)
 {
-    // Skeleton key only works in the frontend
+    // Frontend only
     if (!$this->app->isClient('site'))
     {
         return;
     }
 
-    // Make sure the authentication plugin is enabled. If not, quit,
+    // Skeletonkey authentication plugin must be enabled
     if (!PluginHelper::isEnabled('authentication', 'skeletonkey'))
     {
         return;
     }
 
-    // If the cookie is set AND the user is still a guest, try to log in the user using it
+    // Cookie name Skeletonkey uses
     $cookieName = self::COOKIE_PREFIX . $this->getHashedUserAgent();
     $cookie     = $this->app->getInput()->cookie->get($cookieName);
 
-    // Already logged in? Do nothing.
-    $identity = $this->app->getIdentity();
-    if (!$identity->guest)
+    // No cookie? Nothing to do.
+    if (!$cookie)
     {
         return;
     }
 
-    if ($cookie)
+    // Current user
+    $identity = $this->app->getIdentity();
+
+    // If still a guest, try to log in using Skeletonkey auth
+    if ($identity->guest)
     {
-        // Perform the silent login; Skeletonkey auth plugin will handle the cookie
-        $loginResult = $this->app->login(['username' => ''], ['silent' => true]);
-
-        // If login succeeded, redirect to configured page (if any)
-        if ($loginResult === true || $loginResult instanceof User)
+        try
         {
-            // Get redirect menu item ID from plugin params
-            $itemId = (int) $this->params->get('redirect_itemid', 0);
-
-            if ($itemId > 0)
-            {
-                // Build URL to that menu item
-                $url = Route::_('index.php?Itemid=' . $itemId, false);
-
-                $this->app->redirect($url);
-            }
+            // Skeletonkey auth plugin will pick up the cookie
+            $this->app->login(['username' => ''], ['silent' => true]);
         }
+        catch (\Throwable $e)
+        {
+            // Login failed – don't redirect
+            return;
+        }
+
+        // Refresh identity after login
+        $identity = $this->app->getIdentity();
+    }
+
+    // If we are now logged in and a redirect Itemid is configured, redirect
+    $itemId = (int) $this->params->get('redirect_itemid', 0);
+
+    if (!$identity->guest && $itemId > 0)
+    {
+        // Build URL to chosen menu item
+        $url = Route::_('index.php?Itemid=' . $itemId, false);
+
+        $this->app->redirect($url);
     }
 }
+
 
 	
 	
